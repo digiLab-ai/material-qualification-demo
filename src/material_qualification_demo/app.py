@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from material_qualification_demo.branding import BRAND_CSS, INDIGO
+from material_qualification_demo.branding import BRAND_CSS
 from material_qualification_demo.simulators.tungsten import (
     TungstenQualificationConfig,
     TungstenQualificationSimulator,
@@ -82,32 +82,27 @@ def main() -> None:
     st.markdown('<div class="digilab-card">', unsafe_allow_html=True)
     st.markdown(
         r"""
-Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
-temperature, and impurity fraction. A common expression for DPA is:
-
-$$
-\mathrm{DPA} =
-\int_0^t \int_0^\infty \Phi(E, t)\,\sigma_d(E)\,dE\,dt
-$$
-
-where $\Phi(E, t)$ is neutron flux and $\sigma_d(E)$ is displacement cross-section.
+Experimental simulator setup:
 
 **Inputs**: dpa, irradiation temperature, impurity fraction  
 **Outputs**: lower yield stress, hardness, thermal diffusivity
 
-The simulator maps input conditions to material responses:
+Notes:
+- Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
+temperature, and impurity fraction. Experiments are ran to a targetted DPA via:
 
 $$
-(d, T_{\mathrm{irr}}, c_{\mathrm{imp}}) \rightarrow
-(\sigma_{y,\mathrm{lower}}, H, \alpha)
+\mathrm{DPA} \sim
+\int \Phi(E, t)\,\sigma_d(E)\,dE\,dt
 $$
 
-The initial DOE uses two anchor points at the minimum and maximum corners of the selected domain:
+where $\Phi(E, t)$ is neutron flux and $\sigma_d(E)$ is displacement cross-section. 
 
-$$
-x_{\min} = (d_{\min}, T_{\min}, c_{\min}), \qquad
-x_{\max} = (d_{\max}, T_{\max}, c_{\max})
-$$
+Since this is an estimation, the measured dpa may differ slightly from the requested. 
+
+- We condsider the impurity fraction to be that of tungsten at the start of the experiment.
+
+Only a fixed set of tungsten samples with varying impurity fractions are available. Therefore the nearest available sample to the request will be used.
 """
     )
     st.markdown(
@@ -234,17 +229,14 @@ $$
         )
 
     fig = go.Figure()
-    anchor_mask = experiment_df["point_type"] == "anchor"
-    exp_mask = experiment_df["point_type"] == "experiment"
-
     fig.add_trace(
         go.Scatter(
-            x=experiment_df.loc[anchor_mask, selected_input],
-            y=experiment_df.loc[anchor_mask, selected_output],
+            x=experiment_df[selected_input],
+            y=experiment_df[selected_output],
             mode="markers",
-            marker={"size": 11, "color": INDIGO, "symbol": "diamond"},
-            name="anchor",
-            text=experiment_df.loc[anchor_mask, "sample_id"],
+            marker={"size": 10, "color": "#16D5C2", "symbol": "circle"},
+            name="experiment",
+            text=experiment_df["sample_id"],
             hovertemplate=(
                 "%{text}<br>"
                 + f"{INPUT_LABELS[selected_input]}: %{{x:.4g}}<br>"
@@ -252,22 +244,6 @@ $$
             ),
         )
     )
-    if exp_mask.any():
-        fig.add_trace(
-            go.Scatter(
-                x=experiment_df.loc[exp_mask, selected_input],
-                y=experiment_df.loc[exp_mask, selected_output],
-                mode="markers",
-                marker={"size": 10, "color": "#16D5C2", "symbol": "circle"},
-                name="experiment",
-                text=experiment_df.loc[exp_mask, "sample_id"],
-                hovertemplate=(
-                    "%{text}<br>"
-                    + f"{INPUT_LABELS[selected_input]}: %{{x:.4g}}<br>"
-                    + f"{OUTPUT_LABELS[selected_output]}: %{{y:.4g}}<extra></extra>"
-                ),
-            )
-        )
     fig.update_layout(
         height=450,
         xaxis_title=INPUT_LABELS[selected_input],
