@@ -79,19 +79,43 @@ def main() -> None:
             "Tungsten irradiation qualification simulator."
         )
 
+    st.markdown('<div class="digilab-card">', unsafe_allow_html=True)
     st.markdown(
-        """
-        <div class="digilab-card">
-        <b>Inputs</b>: dpa, irradiation temperature, impurity fraction<br>
-        <b>Outputs</b>: lower yield stress, hardness, thermal diffusivity<br>
-        <span class="metric-caption">
-        The initial design of experiments uses two anchor points at the minimum and maximum
-        corners of the chosen input domain.
-        </span>
-        </div>
-        """,
+        r"""
+Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
+temperature, and impurity fraction. A common expression for DPA is:
+
+$$
+\mathrm{DPA} =
+\int_0^t \int_0^\infty \Phi(E, t)\,\sigma_d(E)\,dE\,dt
+$$
+
+where $\Phi(E, t)$ is neutron flux and $\sigma_d(E)$ is displacement cross-section.
+
+**Inputs**: dpa, irradiation temperature, impurity fraction  
+**Outputs**: lower yield stress, hardness, thermal diffusivity
+
+The simulator maps input conditions to material responses:
+
+$$
+(d, T_{\mathrm{irr}}, c_{\mathrm{imp}}) \rightarrow
+(\sigma_{y,\mathrm{lower}}, H, \alpha)
+$$
+
+The initial DOE uses two anchor points at the minimum and maximum corners of the selected domain:
+
+$$
+x_{\min} = (d_{\min}, T_{\min}, c_{\min}), \qquad
+x_{\max} = (d_{\max}, T_{\max}, c_{\max})
+$$
+"""
+    )
+    st.markdown(
+        '<span class="metric-caption">Use Run experiment to add points, Remove last to undo one step, '
+        "and Reset to return to the two anchor points.</span>",
         unsafe_allow_html=True,
     )
+    st.markdown("</div>", unsafe_allow_html=True)
 
     sim = TungstenQualificationSimulator(TungstenQualificationConfig())
 
