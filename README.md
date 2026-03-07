@@ -20,6 +20,21 @@ This repository contains:repos:
 - tests
 - notebook
 
+## Experimental realism assumptions
+
+The simulator now includes two practical constraints to mimic real experiments:
+
+- **Measured DPA noise**: the achieved/measured DPA can differ from the requested value.
+  The simulator records and returns the measured DPA, and this value is used in the app
+  tables and plots.
+- **Discrete impurity stock**: impurity fraction is selected from a finite set of available
+  tungsten samples. For each request, the nearest available impurity fraction is used and
+  recorded.
+
+In the Streamlit app these effects are enabled by default (with a fixed random seed for
+reproducibility). In the core simulator config, DPA noise defaults to `0.0` so unit tests
+and scripted use remain deterministic unless explicitly enabled.
+
 ## Important note
 
 This simulator is a **demonstrator**, not a validated materials model.  
@@ -44,7 +59,7 @@ poetry run material-qualification-demo
 ```text
 material-qualification-demo/
 ├── assets/
-│   └── digiLab_logo.png
+│   └── digiLab logo.png
 ├── notebooks/
 │   └── tungsten_simulator_walkthrough.ipynb
 ├── src/

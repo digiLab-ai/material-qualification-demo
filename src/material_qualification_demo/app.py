@@ -88,8 +88,8 @@ Experimental simulator setup:
 **Outputs**: lower yield stress, hardness, thermal diffusivity
 
 Notes:
-- Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
-temperature, and impurity fraction. Experiments are ran to a targetted DPA via:
+a) Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
+temperature, and impurity fraction. Experiments are run to a targeted DPA via:
 
 $$
 \mathrm{DPA} \sim
@@ -98,11 +98,12 @@ $$
 
 where $\Phi(E, t)$ is neutron flux and $\sigma_d(E)$ is displacement cross-section. 
 
-Since this is an estimation, the measured dpa may differ slightly from the requested. 
+Since this is an estimation, the measured DPA may differ slightly from the requested value.
 
-- We condsider the impurity fraction to be that of tungsten at the start of the experiment.
+b) We consider the impurity fraction to be that of tungsten at the start of the experiment.
 
-Only a fixed set of tungsten samples with varying impurity fractions are available. Therefore the nearest available sample to the request will be used.
+Only a fixed set of tungsten samples with varying impurity fractions are available, so the
+nearest available sample to the requested impurity fraction is used.
 """
     )
     st.markdown(
@@ -112,7 +113,13 @@ Only a fixed set of tungsten samples with varying impurity fractions are availab
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    sim = TungstenQualificationSimulator(TungstenQualificationConfig())
+    sim = TungstenQualificationSimulator(
+        TungstenQualificationConfig(
+            dpa_measurement_relative_std=0.05,
+            available_impurity_fractions=(0.001, 0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02),
+            random_seed=42,
+        )
+    )
 
     with st.sidebar:
         st.header("Input domain")
