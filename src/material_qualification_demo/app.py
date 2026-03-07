@@ -76,8 +76,7 @@ def main() -> None:
     with cols[1]:
         st.title("Material Qualification Demo")
         st.caption(
-            "Stylised tungsten irradiation qualification simulator for surrogate-modelling and "
-            "active-learning demonstrations."
+            "Tungsten irradiation qualification simulator."
         )
 
     st.markdown(
