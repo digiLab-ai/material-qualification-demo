@@ -32,5 +32,39 @@ h1, h2, h3 {{
     color: var(--muted);
     font-size: 0.9rem;
 }}
+
+/* Primary actions */
+div.stButton > button[kind="primary"] {{
+    background-color: var(--keppel);
+    border: 1px solid var(--keppel);
+    color: #072b2f;
+}}
+div.stButton > button[kind="primary"]:hover {{
+    background-color: #12c2b1;
+    border-color: #12c2b1;
+    color: #041b1d;
+}}
+
+/* Secondary actions */
+div.stButton > button[kind="secondary"] {{
+    background-color: var(--indigo);
+    border: 1px solid var(--indigo);
+    color: #f8fafc;
+}}
+div.stButton > button[kind="secondary"]:hover {{
+    background-color: #12364a;
+    border-color: #12364a;
+}}
+
+/* Download buttons are rendered separately */
+div.stDownloadButton > button {{
+    background-color: var(--indigo);
+    border: 1px solid var(--indigo);
+    color: #f8fafc;
+}}
+div.stDownloadButton > button:hover {{
+    background-color: #12364a;
+    border-color: #12364a;
+}}
 </style>
 """

@@ -79,15 +79,14 @@ def main() -> None:
             "Tungsten irradiation qualification simulator."
         )
 
-    st.markdown('<div class="digilab-card">', unsafe_allow_html=True)
+    # st.markdown('<div class="digilab-card">', unsafe_allow_html=True)
     st.markdown(
         r"""
-Experimental simulator setup:
 
 **Inputs**: dpa, irradiation temperature, impurity fraction  
 **Outputs**: lower yield stress, hardness, thermal diffusivity
 
-Notes:
+**Notes**:
 a) Tungsten irradiation is parameterised here by displacements per atom (DPA), irradiation
 temperature, and impurity fraction. Experiments are run to a targeted DPA via:
 
@@ -260,6 +259,27 @@ nearest available sample to the requested impurity fraction is used.
 
     st.subheader("Final Data")
     final_inputs_df, final_outputs_df = split_inputs_outputs(experiment_df)
+    row_count = len(final_inputs_df)
+    suggested_suffix = f"_{row_count}n"
+    suffix_key = "filename_suffix"
+    auto_key = "filename_suffix_auto_value"
+    if suffix_key not in st.session_state:
+        st.session_state[suffix_key] = suggested_suffix
+        st.session_state[auto_key] = suggested_suffix
+    elif st.session_state.get(suffix_key) == st.session_state.get(auto_key):
+        st.session_state[suffix_key] = suggested_suffix
+        st.session_state[auto_key] = suggested_suffix
+
+    suffix_label_col, suffix_input_col = st.columns([1, 3])
+    with suffix_label_col:
+        st.markdown("**Filename suffix:**")
+    with suffix_input_col:
+        filename_suffix = st.text_input(
+            "Filename suffix",
+            key=suffix_key,
+            label_visibility="collapsed",
+        )
+
     c1, c2 = st.columns(2)
     with c1:
         st.markdown("**Inputs**")
@@ -267,7 +287,7 @@ nearest available sample to the requested impurity fraction is used.
         st.download_button(
             "Download inputs CSV",
             data=final_inputs_df.to_csv(index=False).encode("utf-8"),
-            file_name="experiment_inputs.csv",
+            file_name=f"experiment_inputs{filename_suffix}.csv",
             mime="text/csv",
             use_container_width=True,
         )
@@ -277,7 +297,7 @@ nearest available sample to the requested impurity fraction is used.
         st.download_button(
             "Download outputs CSV",
             data=final_outputs_df.to_csv(index=False).encode("utf-8"),
-            file_name="experiment_outputs.csv",
+            file_name=f"experiment_outputs{filename_suffix}.csv",
             mime="text/csv",
             use_container_width=True,
         )
