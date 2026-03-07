@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "material-qualification-demo"
+version = "0.1.0"
+description = "A tungsten irradiation simulator."
+authors = ["OpenAI for digiLab demo scaffolding"]
+readme = "README.md"
+packages = [{ include = "material_qualification_demo", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+numpy = "^2.2.0"
+pandas = "^2.2.3"
+plotly = "^6.0.0"
+streamlit = "^1.43.0"
+pydantic = "^2.10.0"
+typeguard = "^4.4.2"
+jupyter = "^1.1.1"
+nbformat = "^5.10.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+ruff = "^0.11.0"
+
+[tool.poetry.scripts]
+material-qualification-demo = "material_qualification_demo.app:main"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
