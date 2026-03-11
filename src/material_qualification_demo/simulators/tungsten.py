@@ -49,6 +49,22 @@ class TungstenQualificationConfig(SimulatorConfig):
         le=1.0,
         description="Maximum allowed impurity fraction.",
     )
+    dpa_measurement_relative_std: float = Field(
+        default=0.0,
+        ge=0.0,
+        description=(
+            "Relative standard deviation for measured DPA noise. "
+            "Measured DPA is sampled as requested_dpa * (1 + N(0, std))."
+        ),
+    )
+    available_impurity_fractions: tuple[float, ...] = Field(
+        default=(0.001, 0.003, 0.005, 0.01, 0.015, 0.02),
+        description="Discrete impurity fractions that are experimentally available.",
+    )
+    random_seed: int | None = Field(
+        default=12345,
+        description="Seed used for reproducible DPA measurement noise.",
+    )
     hardness_mode: Literal["gpa"] = Field(default="gpa", description="Hardness unit mode.")
     meta: SimulatorMeta = Field(
         default=SimulatorMeta(
@@ -68,6 +84,15 @@ class TungstenQualificationConfig(SimulatorConfig):
             raise ValueError("recovery_temperature_c must be above absolute zero.")
         return v
 
+    @field_validator("available_impurity_fractions")
+    @classmethod
+    def validate_available_impurity_fractions(cls, values: tuple[float, ...]) -> tuple[float, ...]:
+        if not values:
+            raise ValueError("available_impurity_fractions must not be empty.")
+        if any(v < 0 for v in values):
+            raise ValueError("available_impurity_fractions must be non-negative.")
+        return tuple(sorted(float(v) for v in values))
+
 
 class TungstenQualificationOutput(TypedDict):
     dpa: float
@@ -82,6 +107,7 @@ class TungstenQualificationOutput(TypedDict):
 class TungstenQualificationSimulator(Simulator):
     def __init__(self, config: TungstenQualificationConfig):
         self.config = config
+        self.rng = np.random.default_rng(self.config.random_seed)
 
     def forward(self, X: list[list[float]]) -> list[TungstenQualificationOutput]:
         """
@@ -128,10 +154,12 @@ class TungstenQualificationSimulator(Simulator):
           and reduce thermal diffusivity
         """
         self._validate_inputs(dpa, irradiation_temperature_c, impurity_fraction)
+        measured_dpa = self._measure_dpa(dpa)
+        sampled_impurity_fraction = self._nearest_available_impurity(impurity_fraction)
 
-        damage = self._damage_saturation(dpa)
+        damage = self._damage_saturation(measured_dpa)
         recovery = self._recovery_factor(irradiation_temperature_c)
-        impurity_effect = self._impurity_effect(impurity_fraction)
+        impurity_effect = self._impurity_effect(sampled_impurity_fraction)
 
         hardening_term = damage * (1.0 - 0.55 * recovery)
 
@@ -157,9 +185,9 @@ class TungstenQualificationSimulator(Simulator):
         thermal_diffusivity_mm2_s = max(5.0, thermal_diffusivity_mm2_s)
 
         return {
-            "dpa": float(dpa),
+            "dpa": float(measured_dpa),
             "irradiation_temperature_c": float(irradiation_temperature_c),
-            "impurity_fraction": float(impurity_fraction),
+            "impurity_fraction": float(sampled_impurity_fraction),
             "lower_yield_stress_mpa": float(lower_yield_stress_mpa),
             "hardness_gpa": float(hardness_gpa),
             "thermal_diffusivity_mm2_s": float(thermal_diffusivity_mm2_s),
@@ -216,3 +244,17 @@ class TungstenQualificationSimulator(Simulator):
     def _impurity_effect(self, impurity_fraction: float) -> float:
         scaled = impurity_fraction / self.config.max_impurity_fraction
         return float(np.sqrt(max(scaled, 0.0)))
+
+    def _measure_dpa(self, requested_dpa: float) -> float:
+        if self.config.dpa_measurement_relative_std == 0.0:
+            return float(requested_dpa)
+        noisy = requested_dpa * (
+            1.0 + self.rng.normal(loc=0.0, scale=self.config.dpa_measurement_relative_std)
+        )
+        return float(max(0.0, noisy))
+
+    def _nearest_available_impurity(self, requested_impurity_fraction: float) -> float:
+        available = np.asarray(self.config.available_impurity_fractions, dtype=float)
+        idx = int(np.argmin(np.abs(available - requested_impurity_fraction)))
+        snapped = float(available[idx])
+        return float(min(max(snapped, 0.0), self.config.max_impurity_fraction))
